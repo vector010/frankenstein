@@ -15,7 +15,7 @@
 using namespace dev;
 using namespace exp;
 
-Result FrkhashAux::eval(h256 const& _headerHash, uint64_t _nonce) noexcept {
+frkhash_result FrkhashAux::eval(h256 const& _headerHash, uint64_t _nonce) noexcept {
     auto headerHash = frkhash::hash256_from_bytes(_headerHash.data());
     //auto result = frkhash::hash(headerHash, _nonce);
     //h256 mix{reinterpret_cast<byte*>(result.mix_hash.bytes), h256::ConstructFromPointer};
