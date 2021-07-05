@@ -21,9 +21,8 @@ using namespace exp;
 using boost::asio::ip::tcp;
 
 EthGetworkClient::EthGetworkClient(int worktimeout, unsigned farmRecheckPeriod)
-    : PoolClient(), m_farmRecheckPeriod(farmRecheckPeriod), m_io_service(g_io_service),
-                  m_io_strand(g_io_service), m_socket(nullptr), m_getwork_timer(g_io_service), m_worktimeout(worktimeout),
-                  m_txQueue(64), m_resolver(g_io_service), m_endpoints()
+    : PoolClient(), m_farmRecheckPeriod(farmRecheckPeriod), m_io_strand(g_io_service), m_socket(g_io_service), m_getwork_timer(g_io_service),
+    m_worktimeout(worktimeout), m_txQueue(64), m_resolver(g_io_service), m_endpoints()
 
 
     //PoolClient(), m_farmRecheckPeriod(farmRecheckPeriod), m_io_strand(g_io_service), m_socket(g_io_service),

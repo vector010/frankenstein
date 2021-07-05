@@ -17,6 +17,11 @@
 #include <boost/bind/bind.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/lockfree/queue.hpp>
+#include <libdev/FixedHash.h>
+#include <libdev/Log.h>
+#include <libfrk/FrkhashAux.h>
+#include <libfrk/Farm.h>
+#include <libfrk/Miner.h>
 
 #include <json/json.h>
 
