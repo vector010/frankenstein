@@ -1,0 +1,38 @@
+version: 1.3.{build}
+image: Visual Studio 2017
+clone_depth: 100
+environment:
+  CUDA_VER: 11.2.0
+  CUVER: 11
+  CUDA_ARCHIVE: cuda_11.2.0_460.89_win10
+install:
+- cmd: >-
+    git submodule update --init --recursive
+
+    IF NOT EXIST C:\CUDA\v%CUDA_VER% curl -L https://developer.download.nvidia.com/compute/cuda/%CUDA_VER%/local_installers/%CUDA_ARCHIVE%.exe -o %CUDA_ARCHIVE%.exe
+
+    IF NOT EXIST C:\CUDA mkdir C:\CUDA
+
+    IF NOT EXIST C:\CUDA\v%CUDA_VER% 7z x %CUDA_ARCHIVE%.exe -oC:\CUDA cuda_nvcc/nvcc/* cuda_cudart/* cuda_nvrtc/nvrtc*/*
+
+    IF NOT EXIST C:\CUDA\v%CUDA_VER% move C:\CUDA\cuda_nvcc\nvcc C:\CUDA\v%CUDA_VER% && move C:\CUDA\cuda_cudart\cudart C:\CUDA\v%CUDA_VER%\
+
+    IF EXIST C:\CUDA\v%CUDA_VER%\cudart xcopy C:\CUDA\v%CUDA_VER%\cudart\* C:\CUDA\v%CUDA_VER%\ /S /Y
+
+    set PATH=%PATH%;C:\CUDA\v%CUDA_VER%\bin
+cache: C:\CUDA\v11.2.0
+build_script:
+- cmd: >-
+    call "%ProgramFiles(x86)%\Microsoft Visual Studio\2017\Community\Common7\Tools\VsMSBuildCmd.bat"
+
+    set CMAKE_ARGS=-G "Visual Studio 15 2017 Win64" -H. -Bbuild -DFRKHASHCL=ON -DFRKHASHCUDA=ON -DAPICORE=ON -DHUNTER_JOBS_NUMBER=%NUMBER_OF_PROCESSORS%
+
+    cmake %CMAKE_ARGS%
+
+    cmake --build build --config Release --target package
+artifacts:
+- path: build\frkminer.zip
+  name: frkminer
+- path: build\frkminer.zip.sha256
+  name: sha256
+deploy: off

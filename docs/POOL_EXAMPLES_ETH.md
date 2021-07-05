@@ -11,11 +11,11 @@ where `scheme` can be any of:
 
 * `http` for getwork mode (geth)
 * `stratum+tcp` for plain stratum mode
-* `stratum1+tcp` for plain stratum eth-proxy compatible mode
+* `stratum1+tcp` for plain stratum exp-proxy compatible mode
 * `stratum2+tcp` for plain stratum NiceHash compatible mode
 
 ## A note about this form of notation
-This notation is called URI notation and gives us great flexibility allowing nsfminer to specify all needed arguments per single connection (other miners offer single dedicated CLI arguments which are valid for all connections).
+This notation is called URI notation and gives us great flexibility allowing frkminer to specify all needed arguments per single connection (other miners offer single dedicated CLI arguments which are valid for all connections).
 An URI is formed like this
 
 ```
@@ -69,7 +69,7 @@ The above samples produce the very same result.
 
 ## Secure socket communications for stratum only
 
-nsfminer supports secure socket communications (where pool implements and offers it) to avoid the risk of a [man-in-the-middle attack](https://en.wikipedia.org/wiki/Man-in-the-middle_attack)
+frkminer supports secure socket communications (where pool implements and offers it) to avoid the risk of a [man-in-the-middle attack](https://en.wikipedia.org/wiki/Man-in-the-middle_attack)
 To enable it simply replace tcp with either:
 
 * `ssl` to enable secure socket communication **allowing only TLS 1.2** encryption
@@ -94,11 +94,11 @@ Some examples:
 ## Only for version 0.16+ (older versions not affected)
 
 Stratum autodetection has been introduced to mitigate user's duty to guess/find which stratum flavour to apply (stratum or stratum1 or stratum2).
-If you want to let nsfminer do the tests for you simply enter scheme as `stratum://` (note `+tcp` is missing) or `stratums://` for secure socket or `stratumss://` for secure socket **allowing only TLS 1.2** encryption.
+If you want to let frkminer do the tests for you simply enter scheme as `stratum://` (note `+tcp` is missing) or `stratums://` for secure socket or `stratumss://` for secure socket **allowing only TLS 1.2** encryption.
 
 ## Common samples
 
-Here you can find a collection of samples to connect to most commonly used ethash pools. (alphabetic order).
+Here you can find a collection of samples to connect to most commonly used frkhash pools. (alphabetic order).
 
 * Stratum connection is **always to be preferred** over **getwork** when pool offers it due to its better network latency.
 * If possible the samples use a protocol which supports reporting of hashrate (`--report-hashrate`) if pool supports this.
@@ -111,7 +111,7 @@ We tried to merge the requirements of the variables so they match all pools.
 
 |   Variables  | Description  | Sample |
 | ------------ | ------------ | ------ |
-| `ETH_WALLET` | Replace `ETH_WALLET` with your Ethereum wallet number including the leading `0x`.                                                                                               | `0x1234567890ABCDEF1234567890abcdef12345678` |
+| `EXP_WALLET` | Replace `EXP_WALLET` with your Expanse wallet number including the leading `0x`.                                                                                               | `0x1234567890ABCDEF1234567890abcdef12345678` |
 | `WORKERNAME` | `WORKERNAME` may only contain letters and numbers. Some pools also only allow up to a maximum of 8 characters!                                                                  | `pl1rig01` |
 | `EMAIL`      | `EMAIL` may contain letters, numbers, underscores.  Please encode dashes, @-sign and other uncommon charaters using the [Special characters](#special-characters-in-variables)  | `joe1.doe_jr-ny%40acme.com` |
 | `USERNAME`   | `USERNAME` you got from the pool (like [miningpoolhub.com](#miningpoolhubcom))                                                                                                  | `my_username` |
@@ -126,23 +126,23 @@ The servers are listed in alphabetical order. To get best results reorder them f
 
 | Pool Name | Pool Homepage | Details about connection |
 | --------- | ------------- | - |
-| [2miners.com](#2minerscom) | <https://2miners.com/> | <https://eth.2miners.com/en/help> |
-| [dwarfpool.org](#dwarfpoolorg) | <https://dwarfpool.com/> | <https://dwarfpool.com/eth> |
+| [2miners.com](#2minerscom) | <https://2miners.com/> | <https://exp.2miners.com/en/help> |
+| [dwarfpool.org](#dwarfpoolorg) | <https://dwarfpool.com/> | <https://dwarfpool.com/exp> |
 | [ethermine.org](#ethermineorg) | <https://ethermine.org/> | <https://ethermine.org/> |
 | [ethpool.org](#ethpoolorg) | <https://www.ethpool.org/> | <https://www.ethpool.org/> |
 | [ezil.me](#ezilme) | <https://ezil.me/> | <https://ezil.me/start> |
-| [f2pool.com](#f2poolcom) | <https://www.f2pool.com/> | <https://www.f2pool.com/help/?#tab-content-eth> |
+| [f2pool.com](#f2poolcom) | <https://www.f2pool.com/> | <https://www.f2pool.com/help/?#tab-content-exp> |
 | [flexpool.io](#flexpoolio) | <https://flexpool.io/> | <https://flexpool.io/docs/getting-started/> |
 | [miningpoolhub.com](#miningpoolhubcom) | <https://miningpoolhub.com/> | <https://ethereum.miningpoolhub.com/> |
-| [nanopool.org](#nanopoolorg) | <https://nanopool.org/> | <https://eth.nanopool.org/help> |
+| [nanopool.org](#nanopoolorg) | <https://nanopool.org/> | <https://exp.nanopool.org/help> |
 | [nicehash.com](#nicehashcom) | <https://www.nicehash.com/> | <https://www.nicehash.com/help/which-stratum-servers-are-available> |
-| [sparkpool.com](#sparkpoolcom) | <https://sparkpool.com/> | <https://eth.sparkpool.com/> |
+| [sparkpool.com](#sparkpoolcom) | <https://sparkpool.com/> | <https://exp.sparkpool.com/> |
 | [whalesburg.com](#whalesburgcom) | <https://whalesburg.com/> | <https://whalesburg.com/start_mining/> |
 
 ### 2miners.com
 
 ```
--P stratum1+tcp://ETH_WALLET.WORKERNAME@eth.2miners.com:2020
+-P stratum1+tcp://EXP_WALLET.WORKERNAME@exp.2miners.com:2020
 ```
 
 ### dwarfpool.org
@@ -150,37 +150,37 @@ The servers are listed in alphabetical order. To get best results reorder them f
 With email
 
 ```
--P stratum1+tcp://ETH_WALLET@eth-ar.dwarfpool.com:8008/WORKERNAME/EMAIL
--P stratum1+tcp://ETH_WALLET@eth-asia.dwarfpool.com:8008/WORKERNAME/EMAIL
--P stratum1+tcp://ETH_WALLET@eth-au.dwarfpool.com:8008/WORKERNAME/EMAIL
--P stratum1+tcp://ETH_WALLET@eth-br.dwarfpool.com:8008/WORKERNAME/EMAIL
--P stratum1+tcp://ETH_WALLET@eth-cn.dwarfpool.com:8008/WORKERNAME/EMAIL
--P stratum1+tcp://ETH_WALLET@eth-cn2.dwarfpool.com:8008/WORKERNAME/EMAIL
--P stratum1+tcp://ETH_WALLET@eth-eu.dwarfpool.com:8008/WORKERNAME/EMAIL
--P stratum1+tcp://ETH_WALLET@eth-hk.dwarfpool.com:8008/WORKERNAME/EMAIL
--P stratum1+tcp://ETH_WALLET@eth-sg.dwarfpool.com:8008/WORKERNAME/EMAIL
--P stratum1+tcp://ETH_WALLET@eth-ru.dwarfpool.com:8008/WORKERNAME/EMAIL
--P stratum1+tcp://ETH_WALLET@eth-ru2.dwarfpool.com:8008/WORKERNAME/EMAIL
--P stratum1+tcp://ETH_WALLET@eth-us.dwarfpool.com:8008/WORKERNAME/EMAIL
--P stratum1+tcp://ETH_WALLET@eth-us2.dwarfpool.com:8008/WORKERNAME/EMAIL
+-P stratum1+tcp://EXP_WALLET@exp-ar.dwarfpool.com:8008/WORKERNAME/EMAIL
+-P stratum1+tcp://EXP_WALLET@exp-asia.dwarfpool.com:8008/WORKERNAME/EMAIL
+-P stratum1+tcp://EXP_WALLET@exp-au.dwarfpool.com:8008/WORKERNAME/EMAIL
+-P stratum1+tcp://EXP_WALLET@exp-br.dwarfpool.com:8008/WORKERNAME/EMAIL
+-P stratum1+tcp://EXP_WALLET@exp-cn.dwarfpool.com:8008/WORKERNAME/EMAIL
+-P stratum1+tcp://EXP_WALLET@exp-cn2.dwarfpool.com:8008/WORKERNAME/EMAIL
+-P stratum1+tcp://EXP_WALLET@exp-eu.dwarfpool.com:8008/WORKERNAME/EMAIL
+-P stratum1+tcp://EXP_WALLET@exp-hk.dwarfpool.com:8008/WORKERNAME/EMAIL
+-P stratum1+tcp://EXP_WALLET@exp-sg.dwarfpool.com:8008/WORKERNAME/EMAIL
+-P stratum1+tcp://EXP_WALLET@exp-ru.dwarfpool.com:8008/WORKERNAME/EMAIL
+-P stratum1+tcp://EXP_WALLET@exp-ru2.dwarfpool.com:8008/WORKERNAME/EMAIL
+-P stratum1+tcp://EXP_WALLET@exp-us.dwarfpool.com:8008/WORKERNAME/EMAIL
+-P stratum1+tcp://EXP_WALLET@exp-us2.dwarfpool.com:8008/WORKERNAME/EMAIL
 ```
 
 Without email
 
 ```
--P stratum1+tcp://ETH_WALLET.WORKERNAME@eth-ar.dwarfpool.com:8008
--P stratum1+tcp://ETH_WALLET.WORKERNAME@eth-asia.dwarfpool.com:8008
--P stratum1+tcp://ETH_WALLET.WORKERNAME@eth-au.dwarfpool.com:8008
--P stratum1+tcp://ETH_WALLET.WORKERNAME@eth-br.dwarfpool.com:8008
--P stratum1+tcp://ETH_WALLET.WORKERNAME@eth-cn.dwarfpool.com:8008
--P stratum1+tcp://ETH_WALLET.WORKERNAME@eth-cn2.dwarfpool.com:8008
--P stratum1+tcp://ETH_WALLET.WORKERNAME@eth-eu.dwarfpool.com:8008
--P stratum1+tcp://ETH_WALLET.WORKERNAME@eth-hk.dwarfpool.com:8008
--P stratum1+tcp://ETH_WALLET.WORKERNAME@eth-sg.dwarfpool.com:8008
--P stratum1+tcp://ETH_WALLET.WORKERNAME@eth-ru.dwarfpool.com:8008
--P stratum1+tcp://ETH_WALLET.WORKERNAME@eth-ru2.dwarfpool.com:8008
--P stratum1+tcp://ETH_WALLET.WORKERNAME@eth-us.dwarfpool.com:8008
--P stratum1+tcp://ETH_WALLET.WORKERNAME@eth-us2.dwarfpool.com:8008
+-P stratum1+tcp://EXP_WALLET.WORKERNAME@exp-ar.dwarfpool.com:8008
+-P stratum1+tcp://EXP_WALLET.WORKERNAME@exp-asia.dwarfpool.com:8008
+-P stratum1+tcp://EXP_WALLET.WORKERNAME@exp-au.dwarfpool.com:8008
+-P stratum1+tcp://EXP_WALLET.WORKERNAME@exp-br.dwarfpool.com:8008
+-P stratum1+tcp://EXP_WALLET.WORKERNAME@exp-cn.dwarfpool.com:8008
+-P stratum1+tcp://EXP_WALLET.WORKERNAME@exp-cn2.dwarfpool.com:8008
+-P stratum1+tcp://EXP_WALLET.WORKERNAME@exp-eu.dwarfpool.com:8008
+-P stratum1+tcp://EXP_WALLET.WORKERNAME@exp-hk.dwarfpool.com:8008
+-P stratum1+tcp://EXP_WALLET.WORKERNAME@exp-sg.dwarfpool.com:8008
+-P stratum1+tcp://EXP_WALLET.WORKERNAME@exp-ru.dwarfpool.com:8008
+-P stratum1+tcp://EXP_WALLET.WORKERNAME@exp-ru2.dwarfpool.com:8008
+-P stratum1+tcp://EXP_WALLET.WORKERNAME@exp-us.dwarfpool.com:8008
+-P stratum1+tcp://EXP_WALLET.WORKERNAME@exp-us2.dwarfpool.com:8008
 ```
 
 HINTS:
@@ -192,51 +192,51 @@ HINTS:
 Non-SSL connection:
 
 ```
--P stratum1+tcp://ETH_WALLET.WORKERNAME@asia1.ethermine.org:4444
--P stratum1+tcp://ETH_WALLET.WORKERNAME@eu1.ethermine.org:4444
--P stratum1+tcp://ETH_WALLET.WORKERNAME@us1.ethermine.org:4444
--P stratum1+tcp://ETH_WALLET.WORKERNAME@us2.ethermine.org:4444
+-P stratum1+tcp://EXP_WALLET.WORKERNAME@asia1.ethermine.org:4444
+-P stratum1+tcp://EXP_WALLET.WORKERNAME@eu1.ethermine.org:4444
+-P stratum1+tcp://EXP_WALLET.WORKERNAME@us1.ethermine.org:4444
+-P stratum1+tcp://EXP_WALLET.WORKERNAME@us2.ethermine.org:4444
 ```
 
 SSL connection:
 
 ```
--P stratum1+ssl://ETH_WALLET.WORKERNAME@asia1.ethermine.org:5555
--P stratum1+ssl://ETH_WALLET.WORKERNAME@eu1.ethermine.org:5555
--P stratum1+ssl://ETH_WALLET.WORKERNAME@us1.ethermine.org:5555
--P stratum1+ssl://ETH_WALLET.WORKERNAME@us2.ethermine.org:5555
+-P stratum1+ssl://EXP_WALLET.WORKERNAME@asia1.ethermine.org:5555
+-P stratum1+ssl://EXP_WALLET.WORKERNAME@eu1.ethermine.org:5555
+-P stratum1+ssl://EXP_WALLET.WORKERNAME@us1.ethermine.org:5555
+-P stratum1+ssl://EXP_WALLET.WORKERNAME@us2.ethermine.org:5555
 ```
 
 ### ethpool.org
 
  ```
- -P stratum1+tcp://ETH_WALLET.WORKERNAME@asia1.ethpool.org:3333
- -P stratum1+tcp://ETH_WALLET.WORKERNAME@eu1.ethpool.org:3333
- -P stratum1+tcp://ETH_WALLET.WORKERNAME@us1.ethpool.org:3333
+ -P stratum1+tcp://EXP_WALLET.WORKERNAME@asia1.ethpool.org:3333
+ -P stratum1+tcp://EXP_WALLET.WORKERNAME@eu1.ethpool.org:3333
+ -P stratum1+tcp://EXP_WALLET.WORKERNAME@us1.ethpool.org:3333
  ```
 
 ### ezil.me
 
 Non-SSL connection:
 ```
--P stratum1+tcp://ETH_WALLET.ZIL_WALLET.WORKERNAME@asia.ezil.me:5555
--P stratum1+tcp://ETH_WALLET.ZIL_WALLET.WORKERNAME@us-east.ezil.me:5555
--P stratum1+tcp://ETH_WALLET.ZIL_WALLET.WORKERNAME@us-west.ezil.me:5555
--P stratum1+tcp://ETH_WALLET.ZIL_WALLET.WORKERNAME@eu.ezil.me:5555
+-P stratum1+tcp://EXP_WALLET.ZIL_WALLET.WORKERNAME@asia.ezil.me:5555
+-P stratum1+tcp://EXP_WALLET.ZIL_WALLET.WORKERNAME@us-east.ezil.me:5555
+-P stratum1+tcp://EXP_WALLET.ZIL_WALLET.WORKERNAME@us-west.ezil.me:5555
+-P stratum1+tcp://EXP_WALLET.ZIL_WALLET.WORKERNAME@eu.ezil.me:5555
 ```
 
 SSL connection:
 ```
--P stratum1+ssl://ETH_WALLET.ZIL_WALLET.WORKERNAME@asia.ezil.me:25443
--P stratum1+ssl://ETH_WALLET.ZIL_WALLET.WORKERNAME@us-east.ezil.me:25443
--P stratum1+ssl://ETH_WALLET.ZIL_WALLET.WORKERNAME@us-west.ezil.me:25443
--P stratum1+ssl://ETH_WALLET.ZIL_WALLET.WORKERNAME@eu.ezil.me:25443
+-P stratum1+ssl://EXP_WALLET.ZIL_WALLET.WORKERNAME@asia.ezil.me:25443
+-P stratum1+ssl://EXP_WALLET.ZIL_WALLET.WORKERNAME@us-east.ezil.me:25443
+-P stratum1+ssl://EXP_WALLET.ZIL_WALLET.WORKERNAME@us-west.ezil.me:25443
+-P stratum1+ssl://EXP_WALLET.ZIL_WALLET.WORKERNAME@eu.ezil.me:25443
 ```
 
 ### f2pool.com
 
 ```
--P stratum1+tcp://ETH_WALLET.WORKERNAME@eth.f2pool.com:8008
+-P stratum1+tcp://EXP_WALLET.WORKERNAME@exp.f2pool.com:8008
 ```
 
 ### flexpool.io
@@ -244,23 +244,23 @@ SSL connection:
 Non-SSL connection:
 
 ```
--P stratum1+tcp://ETH_WALLET.WORKERNAME@eu.flexpool.io:4444
--P stratum1+tcp://ETH_WALLET.WORKERNAME@us.flexpool.io:4444
+-P stratum1+tcp://EXP_WALLET.WORKERNAME@eu.flexpool.io:4444
+-P stratum1+tcp://EXP_WALLET.WORKERNAME@us.flexpool.io:4444
 ```
 
 SSL connection:
 
 ```
--P stratum1+ssl://ETH_WALLET.WORKERNAME@eu.flexpool.io:5555
--P stratum1+ssl://ETH_WALLET.WORKERNAME@us.flexpool.io:5555
+-P stratum1+ssl://EXP_WALLET.WORKERNAME@eu.flexpool.io:5555
+-P stratum1+ssl://EXP_WALLET.WORKERNAME@us.flexpool.io:5555
 ```
 
 ### miningpoolhub.com
 
 ```
--P stratum2+tcp://USERNAME%2eWORKERNAME:WORKERPWD@asia.ethash-hub.miningpoolhub.com:20535
--P stratum2+tcp://USERNAME%2eWORKERNAME:WORKERPWD@europe.ethash-hub.miningpoolhub.com:20535
--P stratum2+tcp://USERNAME%2eWORKERNAME:WORKERPWD@us-east.ethash-hub.miningpoolhub.com:20535
+-P stratum2+tcp://USERNAME%2eWORKERNAME:WORKERPWD@asia.frkhash-hub.miningpoolhub.com:20535
+-P stratum2+tcp://USERNAME%2eWORKERNAME:WORKERPWD@europe.frkhash-hub.miningpoolhub.com:20535
+-P stratum2+tcp://USERNAME%2eWORKERNAME:WORKERPWD@us-east.frkhash-hub.miningpoolhub.com:20535
 ```
 
 HINTS:
@@ -273,26 +273,26 @@ HINTS:
 Notice ⚠
 
 * Use "%40" for the @-sign in your email address
-* Use "\%2e" for the .-sign on Linux in ETH_WALLET.WORKERNAME
+* Use "\%2e" for the .-sign on Linux in EXP_WALLET.WORKERNAME
 
 With email:
 
 ```
--P stratum1+tcp://ETH_WALLET@eth-asia1.nanopool.org:9999/WORKERNAME/EMAIL
--P stratum1+tcp://ETH_WALLET@eth-eu1.nanopool.org:9999/WORKERNAME/EMAIL
--P stratum1+tcp://ETH_WALLET@eth-eu2.nanopool.org:9999/WORKERNAME/EMAIL
--P stratum1+tcp://ETH_WALLET@eth-us-east1.nanopool.org:9999/WORKERNAME/EMAIL
--P stratum1+tcp://ETH_WALLET@eth-us-west1.nanopool.org:9999/WORKERNAME/EMAIL
+-P stratum1+tcp://EXP_WALLET@exp-asia1.nanopool.org:9999/WORKERNAME/EMAIL
+-P stratum1+tcp://EXP_WALLET@exp-eu1.nanopool.org:9999/WORKERNAME/EMAIL
+-P stratum1+tcp://EXP_WALLET@exp-eu2.nanopool.org:9999/WORKERNAME/EMAIL
+-P stratum1+tcp://EXP_WALLET@exp-us-east1.nanopool.org:9999/WORKERNAME/EMAIL
+-P stratum1+tcp://EXP_WALLET@exp-us-west1.nanopool.org:9999/WORKERNAME/EMAIL
 ```
 
 Without email:
 
 ```
--P stratum1+tcp://ETH_WALLET.WORKERNAME@eth-asia1.nanopool.org:9999
--P stratum1+tcp://ETH_WALLET.WORKERNAME@eth-eu1.nanopool.org:9999
--P stratum1+tcp://ETH_WALLET.WORKERNAME@eth-eu2.nanopool.org:9999
--P stratum1+tcp://ETH_WALLET.WORKERNAME@eth-us-east1.nanopool.org:9999
--P stratum1+tcp://ETH_WALLET.WORKERNAME@eth-us-west1.nanopool.org:9999
+-P stratum1+tcp://EXP_WALLET.WORKERNAME@exp-asia1.nanopool.org:9999
+-P stratum1+tcp://EXP_WALLET.WORKERNAME@exp-eu1.nanopool.org:9999
+-P stratum1+tcp://EXP_WALLET.WORKERNAME@exp-eu2.nanopool.org:9999
+-P stratum1+tcp://EXP_WALLET.WORKERNAME@exp-us-east1.nanopool.org:9999
+-P stratum1+tcp://EXP_WALLET.WORKERNAME@exp-us-west1.nanopool.org:9999
 ```
 
 
@@ -310,17 +310,17 @@ Without email:
 ### sparkpool.com
 
 ```
--P stratum1+tcp://ETH_WALLET.WORKERNAME@cn.sparkpool.com:3333
--P stratum1+tcp://ETH_WALLET.WORKERNAME@eu.sparkpool.com:3333
--P stratum1+tcp://ETH_WALLET.WORKERNAME@jp.sparkpool.com:3333
--P stratum1+tcp://ETH_WALLET.WORKERNAME@kr.sparkpool.com:3333
--P stratum1+tcp://ETH_WALLET.WORKERNAME@na-east.sparkpool.com:3333
--P stratum1+tcp://ETH_WALLET.WORKERNAME@na-west.sparkpool.com:3333
--P stratum1+tcp://ETH_WALLET.WORKERNAME@tw.sparkpool.com:3333
+-P stratum1+tcp://EXP_WALLET.WORKERNAME@cn.sparkpool.com:3333
+-P stratum1+tcp://EXP_WALLET.WORKERNAME@eu.sparkpool.com:3333
+-P stratum1+tcp://EXP_WALLET.WORKERNAME@jp.sparkpool.com:3333
+-P stratum1+tcp://EXP_WALLET.WORKERNAME@kr.sparkpool.com:3333
+-P stratum1+tcp://EXP_WALLET.WORKERNAME@na-east.sparkpool.com:3333
+-P stratum1+tcp://EXP_WALLET.WORKERNAME@na-west.sparkpool.com:3333
+-P stratum1+tcp://EXP_WALLET.WORKERNAME@tw.sparkpool.com:3333
 ```
 
 ### whalesburg.com
 
 ```
--P stratum1+tcp://ETH_WALLET.WORKERNAME@proxy.pool.whalesburg.com:8082
+-P stratum1+tcp://EXP_WALLET.WORKERNAME@proxy.pool.whalesburg.com:8082
 ```

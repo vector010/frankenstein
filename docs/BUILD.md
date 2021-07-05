@@ -100,7 +100,7 @@ These are sufficient for Ubuntu LTS releases. Other packages may be needed depen
 
 Complete sample Windows batch file - **adapt it to your system**. Assumes that:
 
-* it's placed one folder up from the nsfminer source folder
+* it's placed one folder up from the frkminer source folder
 * you have CMake installed
 * you have Perl installed
 
@@ -115,13 +115,13 @@ rem add Perl in PATH; it's needed for OpenSSL build
 set "PERL_PATH=C:\Perl\perl\bin"
 set "PATH=%PERL_PATH%;%PATH%"
 
-rem switch to nsfminer's source folder
-cd "%~dp0\nsfminer\"
+rem switch to frkminer's source folder
+cd "%~dp0\frkminer\"
 
 if not exist "build\" mkdir "build\"
 
 rem For CUDA 9.x pass also `-T v140`
-cmake -G "Visual Studio 15 2017 Win64" -H. -Bbuild -DETHASHCL=ON -DETHASHCUDA=ON -DAPICORE=ON ..
+cmake -G "Visual Studio 15 2017 Win64" -H. -Bbuild -DFRKHASHCL=ON -DFRKHASHCUDA=ON -DAPICORE=ON ..
 cd "build\"
 cmake --build . --config Release --target package
 
@@ -134,11 +134,11 @@ pause
 Pass these options to CMake configuration command, e.g.
 
 ```shell
-cmake .. -DETHASHCUDA=ON -DETHASHCL=OFF
+cmake .. -DFRKHASHCUDA=ON -DFRKHASHCL=OFF
 ```
 
-* `-DETHASHCL=ON` - enable OpenCL mining, `ON` by default.
-* `-DETHASHCUDA=ON` - enable CUDA mining, `ON` by default.
+* `-DFRKHASHCL=ON` - enable OpenCL mining, `ON` by default.
+* `-DFRKHASHCUDA=ON` - enable CUDA mining, `ON` by default.
 * `-DAPICORE=ON` - enable API Server, `ON` by default.
 * `-DBINKERN=ON` - install AMD binary kernels, `OFF` by default.
 * `-DETHDBUS=ON` - enable D-Bus support, `OFF` by default.

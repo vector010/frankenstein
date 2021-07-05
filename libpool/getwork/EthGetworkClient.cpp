@@ -12,11 +12,11 @@
 
 #include <chrono>
 
-#include <ethash/ethash.hpp>
+#include <frkhash/frkhash.hpp>
 
 using namespace std;
 using namespace dev;
-using namespace eth;
+using namespace exp;
 
 using boost::asio::ip::tcp;
 
@@ -31,6 +31,8 @@ EthGetworkClient::EthGetworkClient(int worktimeout, unsigned farmRecheckPeriod)
     jGetWork["method"] = "eth_getWork";
     jGetWork["params"] = Json::Value(Json::arrayValue);
     m_jsonGetWork = string(Json::writeString(m_jSwBuilder, jGetWork));
+
+    cnote << "GetWork String" << m_jsonGetWork ;
 }
 
 EthGetworkClient::~EthGetworkClient() {
@@ -145,11 +147,9 @@ void EthGetworkClient::handle_connect(const boost::system::error_code& ec) {
                     // The payload
                     os << *line;
 
-#ifdef DEV_BUILD
                     // Out received message only for debug purpouses
-                    if (g_logOptions & LOG_JSON)
+                    //if (g_logOptions & LOG_JSON)
                         cnote << " >> " << *line;
-#endif
 
                     delete line;
 
@@ -257,11 +257,11 @@ void EthGetworkClient::handle_read(const boost::system::error_code& ec, size_t b
 
             // Body
             if (!isHeader) {
-#ifdef DEV_BUILD
+//#ifdef DEV_BUILD
                 // Out received message only for debug purpouses
-                if (g_logOptions & LOG_JSON)
+                //if (g_logOptions & LOG_JSON)
                     cnote << " << " << line;
-#endif
+//#endif
 
                 // Test validity of chunk and process
                 Json::Value jRes;
@@ -312,6 +312,8 @@ void EthGetworkClient::handle_resolve(const boost::system::error_code& ec, tcp::
 }
 
 void EthGetworkClient::processResponse(Json::Value& JRes) {
+    cnote << "Processing Response...";
+
     unsigned _id = 0;        // This SHOULD be the same id as the request it is responding to
     bool _isSuccess = false; // Whether or not this is a succesful or failed response
     string _errReason = "";  // Content of the error reason
@@ -352,9 +354,12 @@ void EthGetworkClient::processResponse(Json::Value& JRes) {
                 WorkPackage newWp;
 
                 newWp.header = h256(JPrm.get(Json::Value::ArrayIndex(0), "").asString());
-                newWp.seed = h256(JPrm.get(Json::Value::ArrayIndex(1), "").asString());
+                //newWp.seed = h256(JPrm.get(Json::Value::ArrayIndex(1), "").asString());
                 newWp.boundary = h256(JPrm.get(Json::Value::ArrayIndex(2), "").asString());
                 newWp.job = newWp.header.hex();
+
+                cnote << "Header: " << newWp.header << "Difficulty: " << newWp.boundary << "Job: " << newWp.job;
+
                 if (m_current.header != newWp.header) {
                     m_current = newWp;
                     m_current_tstamp = chrono::steady_clock::now();
@@ -385,6 +390,8 @@ void EthGetworkClient::processResponse(Json::Value& JRes) {
             if (m_onSolutionRejected)
                 m_onSolutionRejected(_delay, miner_index);
         }
+    }else{
+      cnote << "ID recieved from getWork is goofed up";
     }
 }
 

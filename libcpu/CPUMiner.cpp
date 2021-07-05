@@ -17,8 +17,8 @@
 #include <unistd.h>
 #endif
 
-#include <ethash/ethash.hpp>
-#include <libeth/Farm.h>
+#include <frkhash/frkhash.hpp>
+#include <libfrk/Farm.h>
 
 #include <boost/version.hpp>
 
@@ -40,7 +40,7 @@
 
 using namespace std;
 using namespace dev;
-using namespace eth;
+using namespace exp;
 
 /* ################## OS-specific functions ################## */
 
@@ -133,17 +133,6 @@ bool CPUMiner::initDevice() {
     return true;
 }
 
-/*
- * A new epoch was receifed with last work package (called from Miner::initEpoch())
- *
- * If we get here it means epoch has changed so it's not necessary
- * to check again dag sizes. They're changed for sure
- * We've all related infos in m_epochContext (.dagSize, .dagNumItems, .lightSize, .lightNumItems)
- */
-bool CPUMiner::initEpoch() {
-    m_initialized = true;
-    return true;
-}
 
 /*
    Miner should stop working on the current block
@@ -157,12 +146,12 @@ void CPUMiner::kick_miner() {
     m_new_work_signal.notify_one();
 }
 
-void CPUMiner::search(const dev::eth::WorkPackage& w) {
+void CPUMiner::search(const dev::exp::WorkPackage& w) {
     constexpr size_t blocksize = 30;
 
-    const auto& context = ethash::get_global_epoch_context_full(w.epoch);
-    const auto header = ethash::hash256_from_bytes(w.header.data());
-    const auto boundary = ethash::hash256_from_bytes(w.boundary.data());
+    //const auto& context = frkhash::get_global_epoch_context_full(w.epoch);
+    const auto header = frkhash::hash256_from_bytes(w.header.data());
+    const auto boundary = frkhash::hash256_from_bytes(w.boundary.data());
     auto nonce = w.startNonce;
 
     while (true) {
@@ -175,7 +164,7 @@ void CPUMiner::search(const dev::eth::WorkPackage& w) {
         if (shouldStop())
             break;
 
-        auto r = ethash::search(context, header, boundary, nonce, blocksize);
+        auto r = frkhash::search(header, boundary, nonce, blocksize);
         if (r.solution_found) {
             h256 mix{reinterpret_cast<byte*>(r.mix_hash.bytes), h256::ConstructFromPointer};
             auto sol = Solution{r.nonce, mix, w, chrono::steady_clock::now(), m_index};
@@ -209,18 +198,6 @@ void CPUMiner::workLoop() {
             continue;
         }
 
-        // Epoch change ?
-        if (current.epoch != w.epoch) {
-            setEpoch(w);
-            initEpoch();
-
-            // As DAG generation takes a while we need to
-            // ensure we're on latest job, not on the one
-            // which triggered the epoch change
-            current = w;
-            continue;
-        }
-
         // Persist most recent job.
         // Job's differences should be handled at higher level
         current = w;
@@ -247,7 +224,7 @@ void CPUMiner::enumDevices(map<string, DeviceDescriptor>& _DevicesCollection) {
 
         s.str("");
         s.clear();
-        s << "ethash::eval()/boost " << (BOOST_VERSION / 100000) << "." << (BOOST_VERSION / 100 % 1000) << "."
+        s << "frkhash::eval()/boost " << (BOOST_VERSION / 100000) << "." << (BOOST_VERSION / 100 % 1000) << "."
           << (BOOST_VERSION % 100);
         deviceDescriptor.boardName = s.str();
         deviceDescriptor.uniqueId = uniqueId;

@@ -14,8 +14,8 @@
 #include <json/json.h>
 
 #include <libdev/Worker.h>
-#include <libeth/Farm.h>
-#include <libeth/Miner.h>
+#include <libfrk/Farm.h>
+#include <libfrk/Miner.h>
 
 #include "PoolClient.h"
 #include "getwork/EthGetworkClient.h"
@@ -25,7 +25,7 @@
 using namespace std;
 
 namespace dev {
-namespace eth {
+namespace exp {
 struct PoolSettings {
     std::vector<std::shared_ptr<URI>> connections; // List of connection definitions
     unsigned getWorkPollInterval = 500;            // Interval (ms) between getwork requests
@@ -55,7 +55,6 @@ class PoolManager {
     void stop();
     bool isConnected() { return p_client->isConnected(); };
     bool isRunning() { return m_running; };
-    int getCurrentEpoch();
     uint64_t getCurrentClientDuration() {
         if (p_client && isConnected())
             return p_client->m_session->usDuration();
@@ -64,7 +63,6 @@ class PoolManager {
     };
     double getPoolDifficulty();
     unsigned getConnectionSwitches();
-    unsigned getEpochChanges();
 
   private:
     void rotateConnect();
@@ -89,10 +87,10 @@ class PoolManager {
     boost::asio::deadline_timer m_submithrtimer;
     boost::asio::deadline_timer m_reconnecttimer;
     std::unique_ptr<PoolClient> p_client = nullptr;
-    std::atomic<unsigned> m_epochChanges = {0};
+    //std::atomic<unsigned> m_epochChanges = {0};
     static PoolManager* m_this;
     int m_lastBlock;
 };
 
-} // namespace eth
+} // namespace exp
 } // namespace dev

@@ -4,7 +4,7 @@
 # written for another century.
 #
 # You should have received a copy of the LICENSE file with
-# this file. 
+# this file.
 
 if(UNIX)
 set(CMAKE_CXX_FLAGS "-Wall -Wextra")
@@ -33,27 +33,27 @@ HunterGate(
     LOCAL
 )
 
-project(nsfminer)
+project(frkminer)
 set(PROJECT_VERSION 1.3.14) # Update version
 
 cable_set_build_type(DEFAULT Release CONFIGURATION_TYPES Release RelWithDebInfo)
 
-option(ETHASHCL "Build with OpenCL mining" ON)
-option(ETHASHCUDA "Build with CUDA mining" ON)
-option(ETHASHCPU "Build with CPU mining (only for development)" OFF)
+option(FRKHASHCL "Build with OpenCL mining" ON)
+option(FRKHASHCUDA "Build with CUDA mining" ON)
+option(FRKHASHCPU "Build with CPU mining (only for development)" OFF)
 option(APICORE "Build with API Server support" ON)
 option(DEVBUILD "Log developer metrics" OFF)
 
 # propagates CMake configuration options to the compiler
 function(configureProject)
-    if (ETHASHCL)
-        add_definitions(-DETH_ETHASHCL)
+    if (FRKHASHCL)
+        add_definitions(-DEXP_FRKHASHCL)
     endif()
-    if (ETHASHCUDA)
-        add_definitions(-DETH_ETHASHCUDA)
+    if (FRKHASHCUDA)
+        add_definitions(-DEXP_FRKHASHCUDA)
     endif()
-    if (ETHASHCPU)
-        add_definitions(-DETH_ETHASHCPU)
+    if (FRKHASHCPU)
+        add_definitions(-DEXP_FRKHASHCPU)
     endif()
     if (APICORE)
         add_definitions(-DAPI_CORE)
@@ -75,9 +75,9 @@ message("-----------------------------------------------------------------------
 message("-- CMake ${CMAKE_VERSION}")
 message("-- Build ${CMAKE_BUILD_TYPE} / ${CMAKE_SYSTEM_NAME}")
 message("----------------------------------------------------------------- components")
-message("-- ETHASHCL         Build OpenCL components                      ${ETHASHCL}")
-message("-- ETHASHCUDA       Build CUDA components                        ${ETHASHCUDA}")
-message("-- ETHASHCPU        Build CPU components (only for development)  ${ETHASHCPU}")
+message("-- FRKHASHCL         Build OpenCL components                      ${FRKHASHCL}")
+message("-- FRKHASHCUDA       Build CUDA components                        ${FRKHASHCUDA}")
+message("-- FRKHASHCPU        Build CPU components (only for development)  ${FRKHASHCPU}")
 message("-- APICORE          Build API Server components                  ${APICORE}")
 message("-- DEVBUILD         Build with dev logging                       ${DEVBUILD}")
 message("----------------------------------------------------------------------------")
@@ -91,25 +91,25 @@ endif()
 cable_add_buildinfo_library(PROJECT_NAME ${PROJECT_NAME})
 
 add_subdirectory(libdev)
-add_subdirectory(libeth)
+add_subdirectory(libfrk)
 add_subdirectory(libhwmon)
 add_subdirectory(libpool)
-add_subdirectory(ethash)
+add_subdirectory(frkhash)
 
-if (ETHASHCL)
+if (FRKHASHCL)
     add_subdirectory(libcl)
 endif ()
-if (ETHASHCUDA)
+if (FRKHASHCUDA)
     add_subdirectory(libcuda)
 endif ()
-if (ETHASHCPU)
+if (FRKHASHCPU)
     add_subdirectory(libcpu)
 endif ()
 if (APICORE)
     add_subdirectory(libapi)
 endif()
 
-add_subdirectory(nsfminer)
+add_subdirectory(frkminer)
 
 
 if(WIN32)

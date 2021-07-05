@@ -8,14 +8,14 @@
  * this file.
  */
 
-#include <ethash/ethash.hpp>
-#include <libeth/Farm.h>
+#include <frkhash/frkhash.hpp>
+#include <libfrk/Farm.h>
 
 #include "CUDAMiner.h"
 
 using namespace std;
 using namespace dev;
-using namespace eth;
+using namespace exp;
 
 CUDAMiner::CUDAMiner(unsigned _index, DeviceDescriptor& _device) : Miner("cu-", _index) {
     m_deviceDescriptor = _device;
@@ -54,17 +54,8 @@ bool CUDAMiner::initDevice() {
 
 bool CUDAMiner::initEpoch() {
     m_initialized = false;
-    // If we get here it means epoch has changed so it's not necessary
-    // to check again dag sizes. They're changed for sure
-    m_current_target = 0;
-    auto startInit = chrono::steady_clock::now();
-    size_t RequiredTotalMemory(m_epochContext.dagSize + m_epochContext.lightSize +
-                               m_deviceDescriptor.cuStreamSize * sizeof(Search_results));
-    ReportGPUMemoryRequired(m_epochContext.lightSize, m_epochContext.dagSize,
-                            m_deviceDescriptor.cuStreamSize * sizeof(Search_results));
+
     try {
-        hash128_t* dag;
-        hash64_t* light;
 
         // Allocate GPU buffers
         // We need to reset the device and (re)create the dag
@@ -73,33 +64,13 @@ bool CUDAMiner::initEpoch() {
         CUDA_CALL(cudaSetDeviceFlags(cudaDeviceScheduleBlockingSync));
         CUDA_CALL(cudaDeviceSetCacheConfig(cudaFuncCachePreferL1));
 
-        // Check whether the current device has sufficient memory every time we recreate the dag
-        if (m_deviceDescriptor.totalMemory < RequiredTotalMemory) {
-            ReportGPUNoMemoryAndPause("required", RequiredTotalMemory, m_deviceDescriptor.totalMemory);
-            return false; // This will prevent to exit the thread and
-                          // Eventually resume mining when changing coin or epoch (NiceHash)
-        }
-
-        // create buffer for cache
-        try {
-            CUDA_CALL(cudaMalloc((void**)&light, m_epochContext.lightSize));
-        } catch (...) {
-            ReportGPUNoMemoryAndPause("light cache", m_epochContext.lightSize, m_deviceDescriptor.totalMemory);
-            return false; // This will prevent to exit the thread and
-        }
-        try {
-            CUDA_CALL(cudaMalloc((void**)&dag, m_epochContext.dagSize));
-        } catch (...) {
-            ReportGPUNoMemoryAndPause("DAG", m_epochContext.dagSize, m_deviceDescriptor.totalMemory);
-            return false; // This will prevent to exit the thread and
-        }
 
         // create mining buffers
         for (unsigned i = 0; i < m_deviceDescriptor.cuStreamSize; ++i) {
             try {
                 CUDA_CALL(cudaMalloc(&m_search_buf[i], sizeof(Search_results)));
             } catch (...) {
-                ReportGPUNoMemoryAndPause("mining buffer", sizeof(Search_results), m_deviceDescriptor.totalMemory);
+                //ReportGPUNoMemoryAndPause("mining buffer", sizeof(Search_results), m_deviceDescriptor.totalMemory);
                 return false; // This will prevent to exit the thread and
             }
             CUDA_CALL(cudaStreamCreateWithFlags(&m_streams[i], cudaStreamNonBlocking));
@@ -109,17 +80,6 @@ bool CUDAMiner::initEpoch() {
         resume(MinerPauseEnum::PauseDueToInsufficientMemory);
         resume(MinerPauseEnum::PauseDueToInitEpochError);
 
-        HostToDevice(light, m_epochContext.lightCache, m_epochContext.lightSize);
-
-        set_constants(dag, m_epochContext.dagNumItems, light,
-                      m_epochContext.lightNumItems); // in ethash_cuda_miner_kernel.cu
-
-        ethash_generate_dag(m_epochContext.dagSize, m_block_multiple, m_deviceDescriptor.cuBlockSize, m_streams[0]);
-
-        ReportDAGDone(
-            m_epochContext.dagSize,
-            uint32_t(chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now() - startInit).count()),
-            true);
     } catch (const cuda_runtime_error& ec) {
         cnote << "Unexpected error " << ec.what() << " on CUDA device " << m_deviceDescriptor.uniqueId;
         cnote << "Mining suspended ...";
@@ -149,23 +109,10 @@ void CUDAMiner::workLoop() {
             }
 
             // Epoch change ?
-            if (current.epoch != last.epoch) {
-                setEpoch(current);
-                if (g_seqDAG)
-                    g_seqDAGMutex.lock();
+
                 bool b = initEpoch();
-                if (g_seqDAG)
-                    g_seqDAGMutex.unlock();
                 if (!b)
                     break;
-                freeCache();
-
-                // As DAG generation takes a while we need to
-                // ensure we're on latest job, not on the one
-                // which triggered the epoch change
-                last = current;
-                continue;
-            }
 
             // Persist most recent job.
             // Job's differences should be handled at higher level
@@ -267,7 +214,7 @@ void CUDAMiner::enumDevices(minerMap& _DevicesCollection) {
 
 static const uint32_t zero3[3] = {0, 0, 0}; // zero the result count
 
-void CUDAMiner::search(uint8_t const* header, uint64_t target, uint64_t start_nonce, const dev::eth::WorkPackage& w) {
+void CUDAMiner::search(uint8_t const* header, uint64_t target, uint64_t start_nonce, const dev::exp::WorkPackage& w) {
     set_header(*((const hash32_t*)header));
     if (m_current_target != target) {
         set_target(target);
@@ -282,7 +229,7 @@ void CUDAMiner::search(uint8_t const* header, uint64_t target, uint64_t start_no
          streamIdx++, start_nonce += batch_blocks) {
         HostToDevice(m_search_buf[streamIdx], zero3, sizeof(zero3));
         m_hung_miner.store(false);
-        run_ethash_search(m_block_multiple, m_deviceDescriptor.cuBlockSize, m_streams[streamIdx],
+        run_frkhash_search(m_block_multiple, m_deviceDescriptor.cuBlockSize, m_streams[streamIdx],
                           m_search_buf[streamIdx], start_nonce);
     }
     m_done = false;
@@ -324,7 +271,7 @@ void CUDAMiner::search(uint8_t const* header, uint64_t target, uint64_t start_no
                 streams_bsy &= ~stream_mask;
             else {
                 m_hung_miner.store(false);
-                run_ethash_search(m_block_multiple, m_deviceDescriptor.cuBlockSize, stream, (Search_results*)buffer,
+                run_frkhash_search(m_block_multiple, m_deviceDescriptor.cuBlockSize, stream, (Search_results*)buffer,
                                   start_nonce);
             }
 

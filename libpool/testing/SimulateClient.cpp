@@ -16,7 +16,7 @@
 using namespace std;
 using namespace chrono;
 using namespace dev;
-using namespace eth;
+using namespace exp;
 
 SimulateClient::SimulateClient(unsigned const& block) : PoolClient(), Worker("sim") { m_block = block; }
 
@@ -59,7 +59,7 @@ void SimulateClient::submitSolution(const Solution& solution) {
     // This is a fake submission only evaluated locally
     chrono::steady_clock::time_point submit_start = chrono::steady_clock::now();
     bool accepted =
-        EthashAux::eval(solution.work.epoch, solution.work.header, solution.nonce).value <= solution.work.boundary;
+        FrkhashAux::eval(solution.work.header, solution.nonce).value <= solution.work.boundary;
     chrono::milliseconds response_delay_ms =
         chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now() - submit_start);
 
@@ -77,7 +77,7 @@ void SimulateClient::workLoop() {
     m_start_time = chrono::steady_clock::now();
 
     WorkPackage current;
-    current.seed = h256::random(); // We don't actually need a real seed as the epoch
+    //current.seed = h256::random(); // We don't actually need a real seed as the epoch
                                    // is calculated upon block number (see poolmanager)
     current.header = h256::random();
     current.block = m_block;

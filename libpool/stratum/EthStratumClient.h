@@ -21,15 +21,15 @@
 
 #include <libdev/FixedHash.h>
 #include <libdev/Log.h>
-#include <libeth/EthashAux.h>
-#include <libeth/Farm.h>
-#include <libeth/Miner.h>
+#include <libfrk/FrkhashAux.h>
+#include <libfrk/Farm.h>
+#include <libfrk/Miner.h>
 
 #include "../PoolClient.h"
 
 using namespace std;
 using namespace dev;
-using namespace dev::eth;
+using namespace dev::exp;
 using namespace boost::placeholders;
 
 template <typename Verifier> class verbose_verification {

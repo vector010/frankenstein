@@ -17,12 +17,12 @@
 
 #include <json/json.h>
 
-#include <libeth/Farm.h>
-#include <libeth/Miner.h>
+#include <libfrk/Farm.h>
+#include <libfrk/Miner.h>
 #include <libpool/PoolManager.h>
 
 using namespace dev;
-using namespace dev::eth;
+using namespace dev::exp;
 using namespace std::chrono;
 
 using boost::asio::ip::tcp;

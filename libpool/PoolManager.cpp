@@ -14,7 +14,7 @@
 
 using namespace std;
 using namespace dev;
-using namespace eth;
+using namespace exp;
 
 PoolManager* PoolManager::m_this = nullptr;
 
@@ -82,12 +82,16 @@ void PoolManager::setClientHandlers() {
 
         // Activate timing for HR submission
         if (m_Settings.reportHashrate) {
+
+          cnote << "Activating timing for HR submission...";
+
             m_submithrtimer.expires_from_now(boost::posix_time::seconds(m_Settings.hashRateInterval));
             m_submithrtimer.async_wait(m_io_strand.wrap(
                 boost::bind(&PoolManager::submithrtimer_elapsed, this, boost::asio::placeholders::error)));
         }
 
         // Signal async operations have completed
+        cnote << "Async operations have completed";
         m_async_pending.store(false, memory_order_relaxed);
     });
 
@@ -121,40 +125,19 @@ void PoolManager::setClientHandlers() {
 
     p_client->onWorkReceived([&](WorkPackage const& wp) {
         // Should not happen !
-        if (!wp)
-            return;
-
-        int _currentEpoch = m_currentWp.epoch;
-        bool newEpoch = (_currentEpoch == -1);
-
-        // In EthereumStratum/2.0.0 epoch number is set in session
-        if (!newEpoch) {
-            if (p_client->getConnection()->StratumMode() == 3)
-                newEpoch = (wp.epoch != m_currentWp.epoch);
-            else
-                newEpoch = (wp.seed != m_currentWp.seed);
+        if (!wp){
+          cnote << "Work not recieved or empty!?";
+          return;
         }
+
+
 
         bool newDiff = (wp.boundary != m_currentWp.boundary);
         m_currentWp.difficulty = wp.difficulty;
 
         m_currentWp = wp;
 
-        if (newEpoch) {
-            m_epochChanges.fetch_add(1, memory_order_relaxed);
-
-            // If epoch is valued in workpackage take it
-            if (wp.epoch == -1) {
-                if (m_currentWp.block >= 0)
-                    m_currentWp.epoch = m_currentWp.block / 30000;
-                else
-                    m_currentWp.epoch = ethash::find_epoch_number(ethash::hash256_from_bytes(m_currentWp.seed.data()));
-            }
-        } else {
-            m_currentWp.epoch = _currentEpoch;
-        }
-
-        if (newDiff || newEpoch)
+        if (newDiff)
             showMiningAt();
 
         cnote << "Job: " EthWhite << m_currentWp.header.abridged() << EthGray
@@ -340,11 +323,11 @@ void PoolManager::rotateConnect() {
             p_client = nullptr;
 
         if (m_Settings.connections.at(m_activeConnectionIdx)->Family() == ProtocolFamily::GETWORK)
-            p_client =
-                unique_ptr<PoolClient>(new EthGetworkClient(m_Settings.noWorkTimeout, m_Settings.getWorkPollInterval));
+            p_client = unique_ptr<PoolClient>(new EthGetworkClient(m_Settings.noWorkTimeout, m_Settings.getWorkPollInterval));
+
         if (m_Settings.connections.at(m_activeConnectionIdx)->Family() == ProtocolFamily::STRATUM)
-            p_client =
-                unique_ptr<PoolClient>(new EthStratumClient(m_Settings.noWorkTimeout, m_Settings.noResponseTimeout));
+            p_client = unique_ptr<PoolClient>(new EthStratumClient(m_Settings.noWorkTimeout, m_Settings.noResponseTimeout));
+
         if (m_Settings.connections.at(m_activeConnectionIdx)->Family() == ProtocolFamily::SIMULATION)
             p_client = unique_ptr<PoolClient>(new SimulateClient(m_Settings.benchmarkBlock));
 
@@ -386,11 +369,14 @@ void PoolManager::rotateConnect() {
 
 void PoolManager::showMiningAt() {
     // Should not happen
-    if (!m_currentWp)
-        return;
+    if (!m_currentWp){
+      cnote << "Current Work Empty in PoolManager::ShowMiningAt";
+      return;
+    }
+
 
     double d = dev::getHashesToTarget(m_currentWp.boundary.hex(HexPrefix::Add));
-    cnote << "Epoch : " EthWhite << m_currentWp.epoch << EthReset << " Difficulty : " EthWhite
+    cnote << " Difficulty : " EthWhite
           << dev::getFormattedHashes(d) << EthReset;
 }
 
@@ -433,8 +419,6 @@ void PoolManager::reconnecttimer_elapsed(const boost::system::error_code& ec) {
     }
 }
 
-int PoolManager::getCurrentEpoch() { return m_currentWp.epoch; }
-
 double PoolManager::getPoolDifficulty() {
     if (!m_currentWp)
         return 0.0;
@@ -443,5 +427,3 @@ double PoolManager::getPoolDifficulty() {
 }
 
 unsigned PoolManager::getConnectionSwitches() { return m_connectionSwitches.load(memory_order_relaxed); }
-
-unsigned PoolManager::getEpochChanges() { return m_epochChanges.load(memory_order_relaxed); }

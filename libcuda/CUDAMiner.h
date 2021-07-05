@@ -9,11 +9,11 @@
 
 #pragma once
 
-#include "ethash_cuda_miner_kernel.h"
+#include "frkhash_cuda_miner_kernel.h"
 
 #include <libdev/Worker.h>
-#include <libeth/EthashAux.h>
-#include <libeth/Miner.h>
+#include <libfrk/FrkhashAux.h>
+#include <libfrk/Miner.h>
 
 #include <functional>
 
@@ -21,7 +21,7 @@
 #define CU_TARGET_BATCH_TIME 0.9F // seconds
 
 namespace dev {
-namespace eth {
+namespace exp {
 class CUDAMiner : public Miner {
   public:
     CUDAMiner(unsigned _index, DeviceDescriptor& _device);
@@ -33,14 +33,14 @@ class CUDAMiner : public Miner {
   protected:
     bool initDevice() override;
 
-    bool initEpoch() override;
+    bool initEpoch();
 
     void kick_miner() override;
 
   private:
     void workLoop() override;
 
-    void search(uint8_t const* header, uint64_t target, uint64_t _startN, const dev::eth::WorkPackage& w);
+    void search(uint8_t const* header, uint64_t target, uint64_t _startN, const dev::exp::WorkPackage& w);
 
     Search_results* m_search_buf[MAX_STREAMS];
     cudaStream_t m_streams[MAX_STREAMS];
@@ -50,5 +50,5 @@ class CUDAMiner : public Miner {
     std::mutex m_doneMutex;
 };
 
-} // namespace eth
+} // namespace exp
 } // namespace dev

@@ -8,8 +8,8 @@
  * this file.
  */
 
-#include <ethash/ethash.hpp>
-#include <nsfminer/buildinfo.h>
+#include <frkhash/frkhash.hpp>
+#include <frkminer/buildinfo.h>
 
 #include "EthStratumClient.h"
 
@@ -450,7 +450,7 @@ void EthStratumClient::connect_handler(const boost::system::error_code& ec) {
 #endif
                 cwarn << "* Double check hostname in the -P argument.";
                 cwarn << "* Disable certificate verification all-together via environment "
-                         "variable. See nsfminer --help for info about environment variables";
+                         "variable. See frkminer --help for info about environment variables";
                 cwarn << "If you do the latter please be advised you might expose yourself to the "
                          "risk of seeing your shares stolen";
             }
@@ -517,7 +517,7 @@ void EthStratumClient::connect_handler(const boost::system::error_code& ec) {
 
     case EthStratumClient::ETHEREUMSTRATUM:
 
-        jReq["params"].append(nsfminer_get_buildinfo()->project_name_with_version);
+        jReq["params"].append(frkminer_get_buildinfo()->project_name_with_version);
         jReq["params"].append("EthereumStratum/1.0.0");
 
         break;
@@ -526,7 +526,7 @@ void EthStratumClient::connect_handler(const boost::system::error_code& ec) {
 
         jReq["method"] = "mining.hello";
         Json::Value jPrm;
-        jPrm["agent"] = nsfminer_get_buildinfo()->project_name_with_version;
+        jPrm["agent"] = frkminer_get_buildinfo()->project_name_with_version;
         jPrm["host"] = m_conn->Host();
         jPrm["port"] = toCompactHex((uint32_t)m_conn->Port(), HexPrefix::DontAdd);
         jPrm["proto"] = "EthereumStratum/2.0.0";
@@ -1091,11 +1091,11 @@ void EthStratumClient::processResponse(Json::Value& responseObject) {
                 m_current.job = jPrm.get(Json::Value::ArrayIndex(0), "").asString();
 
                 if (m_conn->StratumMode() == EthStratumClient::ETHEREUMSTRATUM) {
-                    string sSeedHash = jPrm.get(Json::Value::ArrayIndex(1), "").asString();
+                    //string sSeedHash = jPrm.get(Json::Value::ArrayIndex(1), "").asString();
                     string sHeaderHash = jPrm.get(Json::Value::ArrayIndex(2), "").asString();
 
-                    if (sHeaderHash != "" && sSeedHash != "") {
-                        m_current.seed = h256(sSeedHash);
+                    if (sHeaderHash != "") {
+                        //m_current.seed = h256(sSeedHash);
                         m_current.header = h256(sHeaderHash);
                         m_current.boundary = m_session->nextWorkBoundary;
                         m_current.startNonce = m_session->extraNonce;
@@ -1113,10 +1113,10 @@ void EthStratumClient::processResponse(Json::Value& responseObject) {
                     }
                 } else {
                     string sHeaderHash = jPrm.get(Json::Value::ArrayIndex(prmIdx++), "").asString();
-                    string sSeedHash = jPrm.get(Json::Value::ArrayIndex(prmIdx++), "").asString();
+                    //string sSeedHash = jPrm.get(Json::Value::ArrayIndex(prmIdx++), "").asString();
                     string sShareTarget = jPrm.get(Json::Value::ArrayIndex(prmIdx++), "").asString();
 
-                    // Only some eth-proxy compatible implementations carry the block number
+                    // Only some exp-proxy compatible implementations carry the block number
                     // namely ethermine.org
                     m_current.block = -1;
                     if (m_conn->StratumMode() == EthStratumClient::ETHPROXY && jPrm.size() > prmIdx &&
@@ -1143,7 +1143,7 @@ void EthStratumClient::processResponse(Json::Value& responseObject) {
                     if (l < 66)
                         sShareTarget = "0x" + string(66 - l, '0') + sShareTarget.substr(2);
 
-                    m_current.seed = h256(sSeedHash);
+                    //m_current.seed = h256(sSeedHash);
                     m_current.header = h256(sHeaderHash);
                     m_current.boundary = h256(sShareTarget);
                     m_current_timestamp = chrono::steady_clock::now();
@@ -1188,7 +1188,6 @@ void EthStratumClient::processResponse(Json::Value& responseObject) {
 
             m_current.header = h256(header);
             m_current.boundary = h256(m_session->nextWorkBoundary.hex(HexPrefix::Add));
-            m_current.epoch = m_session->epoch;
             m_current.startNonce = m_session->extraNonce;
             m_current.exSizeBytes = m_session->extraNonceSizeBytes;
             m_current_timestamp = chrono::steady_clock::now();
@@ -1239,17 +1238,7 @@ void EthStratumClient::processResponse(Json::Value& responseObject) {
                     processExtranonce(enonce);
             }
         } else if (_method == "mining.set" && m_conn->StratumMode() == ETHEREUMSTRATUM2) {
-            /*
-            {
-              "method": "mining.set",
-              "params": {
-                  "epoch" : "dc",
-                  "target" : "0112e0be826d694b2e62d01511f12a6061fbaec8bc02357593e70e52ba",
-                  "algo" : "ethash",
-                  "extranonce" : "af4c"
-              }
-            }
-            */
+
             if (!responseObject.isMember("params") || !responseObject["params"].isObject() ||
                 responseObject["params"].empty()) {
                 cwarn << "Got invalid mining.set message. Discarding ...";
@@ -1258,14 +1247,10 @@ void EthStratumClient::processResponse(Json::Value& responseObject) {
             m_session->firstMiningSet = true;
             jPrm = responseObject["params"];
             string timeout = jPrm.get("timeout", "").asString();
-            string epoch = jPrm.get("epoch", "").asString();
             string target = jPrm.get("target", "").asString();
 
             if (!timeout.empty())
                 m_session->timeout = stoi(timeout, nullptr, 16);
-
-            if (!epoch.empty())
-                m_session->epoch = stoul(epoch, nullptr, 16);
 
             if (!target.empty()) {
                 target = "0x" + dev::padLeft(target, 64, '0');
@@ -1281,7 +1266,7 @@ void EthStratumClient::processResponse(Json::Value& responseObject) {
             m_io_service.post(m_io_strand.wrap(boost::bind(&EthStratumClient::disconnect, this)));
         } else if (_method == "client.get_version") {
             jReq["id"] = _id;
-            jReq["result"] = nsfminer_get_buildinfo()->project_name_with_version;
+            jReq["result"] = frkminer_get_buildinfo()->project_name_with_version;
 
             if (_rpcVer == 1) {
                 jReq["error"] = Json::Value::null;

@@ -10,17 +10,17 @@
 
 #include <boost/dll.hpp>
 
-#include <ethash/ethash.hpp>
-#include <libeth/Farm.h>
+#include <frkhash/frkhash.hpp>
+#include <libfrk/Farm.h>
 
 #include "CLMiner.h"
-#include "ethash.h"
+#include "frkhash.h"
 
 using namespace dev;
-using namespace eth;
+using namespace exp;
 
 namespace dev {
-namespace eth {
+namespace exp {
 
 const size_t c_maxSearchResults = 4;
 
@@ -225,7 +225,7 @@ vector<cl::Device> getDevices(vector<cl::Platform> const& _platforms, unsigned _
 
 } // namespace
 
-} // namespace eth
+} // namespace exp
 } // namespace dev
 
 CLMiner::CLMiner(unsigned _index, DeviceDescriptor& _device) : Miner("cl-", _index) {
@@ -239,7 +239,7 @@ CLMiner::~CLMiner() {
 }
 
 // NOTE: The following struct must match the one defined in
-// ethash.cl
+// frkhash.cl
 struct SearchResults {
     uint32_t count;
     uint32_t hashCount;
@@ -284,18 +284,13 @@ void CLMiner::workLoop() {
             }
 
             if (current.header != w.header) {
-                if (current.epoch != w.epoch) {
-                    setEpoch(w);
-                    if (g_seqDAG)
-                        g_seqDAGMutex.lock();
+                //if (current.epoch != w.epoch) {
+                    //setEpoch(w);
                     bool b = initEpoch();
-                    if (g_seqDAG)
-                        g_seqDAGMutex.unlock();
                     if (!b)
                         break;
-                    freeCache();
                     w = work();
-                }
+                //}
 
                 startNonce = w.startNonce;
 
@@ -306,7 +301,7 @@ void CLMiner::workLoop() {
                 m_queue->enqueueWriteBuffer(*m_searchBuffer, CL_FALSE, offsetof(SearchResults, count), sizeof(zerox3),
                                             zerox3);
 
-                m_searchKernel.setArg(6, (uint64_t)(u64)((u256)w.boundary >> 192));
+                m_searchKernel.setArg(3, (uint64_t)(u64)((u256)w.boundary >> 192));
 #ifdef DEV_BUILD
                 if (g_logOptions & LOG_SWITCH)
                     cnote << "Switch time: "
@@ -324,7 +319,7 @@ void CLMiner::workLoop() {
             uint32_t batch_blocks = m_deviceDescriptor.clGroupSize * m_block_multiple;
 
             // Run the kernel.
-            m_searchKernel.setArg(5, startNonce);
+            m_searchKernel.setArg(2, startNonce);
             m_hung_miner.store(false);
             m_queue->enqueueNDRangeKernel(m_searchKernel, cl::NullRange, batch_blocks, m_deviceDescriptor.clGroupSize);
 
@@ -563,17 +558,6 @@ bool CLMiner::initDevice() {
 
 bool CLMiner::initEpoch() {
     m_initialized = false;
-    auto startInit = chrono::steady_clock::now();
-    size_t RequiredMemory = m_epochContext.dagSize + m_epochContext.lightSize + sizeof(SearchResults) + 32;
-
-    ReportGPUMemoryRequired(m_epochContext.lightSize, m_epochContext.dagSize, sizeof(SearchResults) + 32);
-
-    // Check whether the current device has sufficient memory every time we recreate the dag
-    if (m_deviceDescriptor.totalMemory < RequiredMemory) {
-        ReportGPUNoMemoryAndPause("total", RequiredMemory, m_deviceDescriptor.totalMemory);
-        return false; // This will prevent to exit the thread and
-                      // Eventually resume mining when changing coin or epoch (NiceHash)
-    }
 
     try {
         char options[256] = {0};
@@ -593,40 +577,6 @@ bool CLMiner::initEpoch() {
         m_queue = new cl::CommandQueue(*m_context, m_device);
         m_abortqueue = new cl::CommandQueue(*m_context, m_device);
 
-        m_dagItems = m_epochContext.dagNumItems;
-
-        bool dagOk = true;
-        // create buffer for dag
-        try {
-            // Create mining buffers
-            m_searchBuffer = new cl::Buffer(*m_context, CL_MEM_WRITE_ONLY, sizeof(SearchResults));
-            m_header = new cl::Buffer(*m_context, CL_MEM_READ_ONLY, 32);
-            m_light = new cl::Buffer(*m_context, CL_MEM_READ_ONLY, m_epochContext.lightSize);
-            if (!m_deviceDescriptor.clSplit) {
-                try {
-                    m_dag[0] = new cl::Buffer(*m_context, CL_MEM_READ_ONLY, m_epochContext.dagSize);
-                    m_dag[1] = nullptr;
-                } catch (cl::Error const&) {
-                    dagOk = false;
-                }
-            } else
-                dagOk = false;
-
-            if (!dagOk) {
-                unsigned delta = (m_epochContext.dagNumItems & 1) ? 64 : 0;
-                m_dag[0] = new cl::Buffer(*m_context, CL_MEM_READ_ONLY, m_epochContext.dagSize / 2 + delta);
-                m_dag[1] = new cl::Buffer(*m_context, CL_MEM_READ_ONLY, m_epochContext.dagSize / 2 - delta);
-            }
-        } catch (cl::Error const& err) {
-            if ((err.err() == CL_OUT_OF_RESOURCES) || (err.err() == CL_OUT_OF_HOST_MEMORY)) {
-                cwarn << ethCLErrorHelper("Creating DAG buffer failed", err);
-                pause(MinerPauseEnum::PauseDueToInitEpochError);
-                free_buffers();
-                return false;
-            } else
-                throw;
-        }
-
         // Release the pause flag if any
         resume(MinerPauseEnum::PauseDueToInsufficientMemory);
         resume(MinerPauseEnum::PauseDueToInitEpochError);
@@ -638,15 +588,13 @@ bool CLMiner::initEpoch() {
         // TODO: Just use C++ raw string literal.
         string code;
 
-        code = string(ethash_cl, ethash_cl + sizeof(ethash_cl));
+        code = string(frkhash_cl, frkhash_cl + sizeof(frkhash_cl));
 
         addDefinition(code, "WORKSIZE", m_deviceDescriptor.clGroupSize);
         addDefinition(code, "ACCESSES", 64);
         addDefinition(code, "MAX_OUTPUTS", c_maxSearchResults);
         addDefinition(code, "PLATFORM", static_cast<unsigned>(m_deviceDescriptor.clPlatformType));
         addDefinition(code, "COMPUTE", computeCapability);
-        if (!dagOk)
-            addDefinition(code, "SPLIT_DAG", 1);
 
         // create miner OpenCL program
         cl::Program::Sources sources{{code.data(), code.size()}};
@@ -663,8 +611,6 @@ bool CLMiner::initEpoch() {
 
         try {
             m_searchKernel = cl::Kernel(program, "search");
-            m_dagKernel = cl::Kernel(program, "GenerateDAG");
-            m_queue->enqueueWriteBuffer(*m_light, CL_TRUE, 0, m_epochContext.lightSize, m_epochContext.lightCache);
         } catch (cl::Error const& err) {
             cwarn << ethCLErrorHelper("Creating opencl failed", err);
             pause(MinerPauseEnum::PauseDueToInitEpochError);
@@ -674,45 +620,13 @@ bool CLMiner::initEpoch() {
         // create buffer for header
 
         m_searchKernel.setArg(1, m_header[0]);
-        m_searchKernel.setArg(2, *m_dag[0]);
-        m_searchKernel.setArg(3, *m_dag[1]);
-        m_searchKernel.setArg(4, m_dagItems);
 
         m_queue->enqueueWriteBuffer(*m_searchBuffer, CL_FALSE, 0, sizeof(zerox3), zerox3);
 
-        m_dagKernel.setArg(1, *m_light);
-        m_dagKernel.setArg(2, *m_dag[0]);
-        m_dagKernel.setArg(3, *m_dag[1]);
-        m_dagKernel.setArg(4, (uint32_t)(m_epochContext.lightSize / 64));
-
-        const uint32_t workItems = m_dagItems * 2; // GPU computes partial 512-bit DAG items.
-
-        uint32_t start, chunk = m_deviceDescriptor.clGroupSize * m_block_multiple;
-        if (chunk > workItems)
-            chunk = workItems;
-        for (start = 0; start <= workItems - chunk; start += chunk) {
-            m_dagKernel.setArg(0, start);
-            m_queue->enqueueNDRangeKernel(m_dagKernel, cl::NullRange, chunk, m_deviceDescriptor.clGroupSize);
-            m_queue->finish();
-        }
-        if (start < workItems) {
-            uint32_t groupsLeft = workItems - start;
-            groupsLeft = (groupsLeft + m_deviceDescriptor.clGroupSize - 1) / m_deviceDescriptor.clGroupSize;
-            m_dagKernel.setArg(0, start);
-            m_queue->enqueueNDRangeKernel(m_dagKernel, cl::NullRange, groupsLeft * m_deviceDescriptor.clGroupSize,
-                                          m_deviceDescriptor.clGroupSize);
-            m_queue->finish();
-        }
-
-        auto dagTime = chrono::duration_cast<chrono::milliseconds>(chrono::steady_clock::now() - startInit);
-
         m_searchKernel.setArg(0, *m_searchBuffer); // Supply output buffer to kernel.
         m_searchKernel.setArg(1, *m_header);       // Supply header buffer to kernel.
-        m_searchKernel.setArg(2, *m_dag[0]);       // Supply DAG buffer to kernel.
-        m_searchKernel.setArg(3, *m_dag[1]);       // Supply DAG buffer to kernel.
-        m_searchKernel.setArg(4, m_dagItems);
 
-        ReportDAGDone(m_epochContext.dagSize, uint32_t(dagTime.count()), dagOk);
+        //ReportDAGDone(m_epochContext.dagSize, uint32_t(dagTime.count()), dagOk);
     } catch (cl::Error const& err) {
         ccrit << ethCLErrorHelper("OpenCL init failed", err);
         pause(MinerPauseEnum::PauseDueToInitEpochError);

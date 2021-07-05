@@ -13,7 +13,7 @@
 
 #include <boost/asio/ip/address.hpp>
 
-#include <libeth/Miner.h>
+#include <libfrk/Miner.h>
 #include <libpool/PoolURI.h>
 
 extern boost::asio::io_service g_io_service;
@@ -21,7 +21,7 @@ extern boost::asio::io_service g_io_service;
 using namespace std;
 
 namespace dev {
-namespace eth {
+namespace exp {
 struct Session {
     // Tstamp of sessio start
     chrono::steady_clock::time_point start = chrono::steady_clock::now();
@@ -113,5 +113,5 @@ class PoolClient {
     Connected m_onConnected;
     WorkReceived m_onWorkReceived;
 };
-} // namespace eth
+} // namespace exp
 } // namespace dev

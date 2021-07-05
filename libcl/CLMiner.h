@@ -13,8 +13,8 @@
 #include <mutex>
 
 #include <libdev/Worker.h>
-#include <libeth/EthashAux.h>
-#include <libeth/Miner.h>
+#include <libfrk/FrkhashAux.h>
+#include <libfrk/Miner.h>
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/lexical_cast.hpp>
@@ -45,7 +45,7 @@
 #define CL_TARGET_BATCH_TIME 0.3F // seconds
 
 namespace dev {
-namespace eth {
+namespace exp {
 class CLMiner : public Miner {
   public:
     CLMiner(unsigned _index, DeviceDescriptor& _device);
@@ -63,31 +63,16 @@ class CLMiner : public Miner {
     bool initEpoch();
 
     cl::Kernel m_searchKernel;
-    cl::Kernel m_dagKernel;
     cl::Device m_device;
 
     cl::Context* m_context = nullptr;
     cl::CommandQueue* m_queue = nullptr;
     cl::CommandQueue* m_abortqueue = nullptr;
-    cl::Buffer* m_dag[2] = {nullptr, nullptr};
-    cl::Buffer* m_light = nullptr;
     cl::Buffer* m_header = nullptr;
     cl::Buffer* m_searchBuffer = nullptr;
 
     void free_buffers() {
         m_abortMutex.lock();
-        if (m_dag[0]) {
-            delete m_dag[0];
-            m_dag[0] = nullptr;
-        }
-        if (m_dag[1]) {
-            delete m_dag[1];
-            m_dag[1] = nullptr;
-        }
-        if (m_light) {
-            delete m_light;
-            m_light = nullptr;
-        }
         if (m_header) {
             delete m_header;
             m_header = nullptr;
@@ -110,9 +95,8 @@ class CLMiner : public Miner {
         }
     }
 
-    unsigned m_dagItems = 0;
     std::mutex m_abortMutex;
 };
 
-} // namespace eth
+} // namespace exp
 } // namespace dev
